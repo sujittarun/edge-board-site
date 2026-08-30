@@ -76,6 +76,8 @@ nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--surface)
 
 /* intro */
 .intro{padding:24px 0 18px;border-bottom:1px solid var(--rule)}
+.intro.tight{padding:16px 0 12px}
+.intro.tight h1{margin:0 0 2px}
 .intro h1{font-size:clamp(24px,2.6vw,32px);font-variation-settings:"wdth" 92;font-weight:700;max-width:30ch}
 .intro p{max-width:70ch;color:var(--ink-2);margin:10px 0 0;font-size:14px}
 .provenance{display:flex;flex-wrap:wrap;gap:0;margin-top:22px;border:1px solid var(--rule);background:var(--surface)}
@@ -331,7 +333,10 @@ table.data td.n{font-family:"IBM Plex Mono";font-variant-numeric:tabular-nums}
   font-family:"IBM Plex Mono",monospace}
 /* reference material, read once, kept below the work rather than in front of it */
 .refs{margin-top:34px;padding-top:18px;border-top:1px solid var(--rule)}
-.capbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.grouphead{display:flex;align-items:center;gap:12px;margin:0 0 10px;flex-wrap:wrap}
+.grouphead h3{margin:0}
+.grouphead hr{flex:1 1 40px;min-width:24px;height:0;margin:0;border:0;border-top:1px solid var(--rule)}
+.grouphead .kbtn{flex:none;margin-left:auto}
 .setup.over{opacity:.55}
 .setup.over:hover{opacity:1}
 .sym{font-family:"Archivo";font-variation-settings:"wdth" 108;font-weight:700;font-size:20px;letter-spacing:-.01em}
@@ -3328,28 +3333,18 @@ function setupView() {
                 cushion:'Biggest cushion over break-even', rr:'Best reward against risk'};
   const SUB = {prob:' &middot; wins more often than not', payoff:' &middot; big payoff, lower hit rate'};
   h += `<div class="grouphead"><h3>${ranked ? HEAD[sortKey] : 'Worth a look'} &mdash;
-        ${shortlist.length}${SUB[style] || ''}</h3><hr></div>`;
+        ${shortlist.length}${SUB[style] || ''}</h3><hr>
+        ${all && SLOTS ? `<button class="kbtn" data-basket="${all}">Send ${legs.length} to Kite</button>` : ''}</div>`;
   // The banner that stood here announced "Take N today" over a paragraph restating the cap and the
-  // portfolio numbers. Both facts are already on the page - the cap sits in its own control and the
-  // concurrency result belongs in the record, not repeated above every list. What is left is the
-  // one thing that was not a restatement: the button.
-  if (all && SLOTS) h += `<div class="capbar">
-      <button class="kbtn" data-basket="${all}">Send ${legs.length} to Kite</button>
-    </div>`;
   h += top || '<p style="color:var(--ink-3)">Nothing cleared the bar today.</p>';
   h += `<details style="margin-top:22px"><summary class="grouphead" style="cursor:pointer;list-style:none">
       <h3>The other ${C.length} &mdash; lower conviction, open if you want them</h3><hr></summary>
       <div style="margin-top:12px">${C.map(card).join('')}</div></details>`;
   h += trackView();
   $('#siglist').innerHTML = h;
-  const n = $('#sigcount');
-  if (n) n.textContent = `${cards.length} stocks from ${SIG.signals.length} raw triggers`;
 }
-$('#setupbody').innerHTML = `<div class="intro"><h1>What you could put on today</h1>
-  <p>Entry, stop and target are the exact levels the backtest measured. Set your capital, then send
-  any of them to Kite. Hover a chart for a session; click to enlarge.</p>
-  <p class="lab" id="sigcount" style="margin-bottom:4px">${SIG.signals.length} setups &#183; scanned ${SIG.as_of}</p>
-  <p class="exmeta" id="livecount" style="margin-bottom:10px">prices at close ${(D.marks && D.marks.as_of) || SIG.as_of}</p>
+$('#setupbody').innerHTML = `<div class="intro tight"><h1>What you could put on today</h1>
+  <p class="exmeta" id="livecount" style="margin:4px 0 0">prices at close ${(D.marks && D.marks.as_of) || SIG.as_of}</p>
   <div id="siglist"></div>
   <div class="refs">
     <div class="callout" id="rankwhy" style="margin:0 0 10px"></div>
