@@ -1,0 +1,448 @@
+<title>What This Board Called</title>
+<style>
+:root{--bg:#F3F5F8;--card:#fff;--ink:#14181F;--ink2:#4B5563;--ink3:#77808F;
+  --rule:#D9DFE8;--edge:#17795E;--bad:#B2402F;--accent:#2B4ACB}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0C1015;--card:#121820;
+  --ink:#E7ECF3;--ink2:#A3ADBC;--ink3:#77808F;--rule:#212A36;--edge:#39B992;--bad:#E06B58;--accent:#7C9BFF}}
+:root[data-theme="dark"]{--bg:#0C1015;--card:#121820;--ink:#E7ECF3;--ink2:#A3ADBC;--ink3:#77808F;
+  --rule:#212A36;--edge:#39B992;--bad:#E06B58;--accent:#7C9BFF}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:40px 22px 80px;
+  font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-family:"Archivo",Arial,sans-serif;font-size:clamp(26px,3.2vw,36px);letter-spacing:-.02em;
+  margin:0 0 8px;text-wrap:balance}
+.sub{color:var(--ink2);max-width:66ch;margin:0 0 26px}
+.pledge{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--accent);
+  padding:16px 18px;margin:0 0 26px}
+.pledge ol{margin:8px 0 0;padding-left:18px;color:var(--ink2);font-size:13.5px}
+.pledge li{margin:5px 0}
+h2{font-family:"Archivo",Arial,sans-serif;font-size:17px;margin:34px 0 4px}
+.note{color:var(--ink3);font-size:12.5px;margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule)}
+.kpis>div{background:var(--card);padding:11px 13px}
+.kpis span{display:block;font-family:"Archivo",Arial,sans-serif;text-transform:uppercase;
+  letter-spacing:.09em;font-size:9px;color:var(--ink3);font-weight:600}
+.kpis b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:19px;font-variant-numeric:tabular-nums}
+.none{background:var(--card);border:1px solid var(--rule);padding:15px 17px;color:var(--ink2);
+  font-size:13.5px;max-width:70ch;margin:0}
+.scrollx{overflow-x:auto;border:1px solid var(--rule);background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:"Archivo",Arial,sans-serif;text-transform:uppercase;letter-spacing:.08em;
+  font-size:9.5px;color:var(--ink3);text-align:left;padding:9px 11px;border-bottom:1px solid var(--rule);
+  white-space:nowrap}
+td{padding:8px 11px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.d{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+td .r{display:block;color:var(--ink3);font-size:11.5px}
+td.w{color:var(--ink3);font-size:12px}
+.pos{color:var(--edge)} .neg{color:var(--bad)}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);color:var(--ink3);font-size:12px}
+</style>
+<div class="wrap">
+<h1>What this board called</h1>
+<p class="sub">Every setup this board printed, written down the day it printed and followed to its
+own exit. Recording since <b>2026-08-28</b>. Page built 2026-08-30.</p>
+
+<div class="pledge"><b>How to check this</b>
+<ol>
+  <li>Nothing is selected after the fact. Every call is here, in the order it was made, losers included.</li>
+  <li>The date it was recorded sits next to the outcome. Recorded first, resolved later, in that order.</li>
+  <li>What is not yet known says so. Open positions are marked open and left out of the figures below.</li>
+  <li>Exits follow the rule that made the call: entry at the next open, stop assumed hit before target
+      when one bar spans both, the rule's own time limit, 0.25% round-trip costs deducted.</li>
+</ol></div>
+
+<h2>Settled</h2>
+<p class="note">Closed positions only. This is the number that counts, and it starts empty.</p>
+<p class="none">Nothing has closed yet. 6 positions
+        are live and 45 are waiting to enter.
+        There is no hit rate to report, and reporting one from open positions marked at a hopeful
+        price is the thing this page exists not to do.</p>
+
+
+
+<h2>Running now &mdash; 6</h2>
+<p class="note">Open, so the result is not known. Shown for completeness, excluded from the figures.</p>
+<div class="scrollx"><table><thead><tr><th>Recorded</th><th>Call</th><th>Entry</th><th>Status</th><th>So far</th><th></th></tr></thead>
+<tbody><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>IDFCFIRSTB</b><span class="r">Bollinger Lower-Band Reversion</span></td>
+          <td class="d">83.79</td>
+          <td class="d">open</td>
+          <td class="d neg">-0.13R</td>
+          <td class="w">running</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ABB</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">7501.0</td>
+          <td class="d">open</td>
+          <td class="d neg">-0.13R</td>
+          <td class="w">running</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ADANIPORTS</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">1712.0</td>
+          <td class="d">open</td>
+          <td class="d neg">-0.11R</td>
+          <td class="w">running</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>HAL</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">4884.1</td>
+          <td class="d">open</td>
+          <td class="d neg">-0.23R</td>
+          <td class="w">running</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ASIANPAINT</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">2645.0</td>
+          <td class="d">open</td>
+          <td class="d neg">-0.54R</td>
+          <td class="w">running</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>PAGEIND</b><span class="r">Confirmed Fakeout Reclaim</span></td>
+          <td class="d">35800.0</td>
+          <td class="d">open</td>
+          <td class="d pos">+0.04R</td>
+          <td class="w">running</td>
+        </tr></tbody></table></div>
+
+<h2>Recorded, not yet entered &mdash; 45</h2>
+<p class="note">Signalled on the most recent session. These enter at the next open, so they have no
+result yet and are listed only so the record is complete before the outcome exists.</p>
+<div class="scrollx"><table><thead><tr><th>Recorded</th><th>Call</th><th>Entry</th><th>Status</th><th>Result</th><th></th></tr></thead>
+<tbody><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>TVSMOTOR</b><span class="r">Bollinger Lower-Band Reversion</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>TORNTPHARM</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ZYDUSLIFE</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>SHRIRAMFIN</b><span class="r">RSI(2) Deep Dip</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>NESTLEIND</b><span class="r">Stochastic Oversold Cross</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>UNITDSPR</b><span class="r">RSI(2) Deep Dip</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>INDUSINDBK</b><span class="r">RSI(2) Deep Dip</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>PNB</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>HINDALCO</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>GAIL</b><span class="r">Connors Double Seven</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>POLYCAB</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>SIEMENS</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>JSWSTEEL</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>BOSCHLTD</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>HEROMOTOCO</b><span class="r">Stochastic Oversold Cross</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>SUNPHARMA</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>AUROPHARMA</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ADANIENT</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>TITAN</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>LT</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>GRASIM</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>DIVISLAB</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>SBIN</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>BAJAJ-AUTO</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>MOTHERSON</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ETERNAL</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>NAUKRI</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>MARICO</b><span class="r">RSI(2) Deep Dip</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>AUBANK</b><span class="r">RSI(2) Deep Dip</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>BAJFINANCE</b><span class="r">Connors Double Seven</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ASHOKLEY</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>BAJAJHLDNG</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>INDIGO</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>CHOLAFIN</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>BAJAJFINSV</b><span class="r">Connors Double Seven</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>PIDILITIND</b><span class="r">RSI(2) Deep Dip</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>EICHERMOT</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>CIPLA</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>JUBLFOOD</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>BALKRISIND</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>TECHM</b><span class="r">OBV Bullish Divergence</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ICICIBANK</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>APOLLOHOSP</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>ITC</b><span class="r">Turtle Soup</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr><tr>
+          <td class="d">2026-08-28</td>
+          <td><b>KOTAKBANK</b><span class="r">Monthly Expiry Week</span></td>
+          <td class="d">&amp;mdash;</td>
+          <td class="d">not entered</td>
+          <td class="d ">&mdash;</td>
+          <td class="w">enters at the next open</td>
+        </tr></tbody></table></div>
+
+<h2>Replayed history &mdash; not part of the record above</h2>
+<p class="note">The same rules run over the 120 sessions before recording began.
+It is <b>in-sample</b>: these rules were kept or dropped using data that includes this window, so they
+already knew how it ended. It shows the machinery agrees with itself, and nothing more.</p>
+<div class="kpis">
+  <div><span>Trades</span><b>1,282</b></div>
+  <div><span>Hit rate</span><b>46.0%</b></div>
+  <div><span>Per trade</span><b class="pos">+0.068R</b></div>
+  <div><span>Total</span><b class="pos">+87.4R</b></div>
+</div>
+
+<footer>One R is the amount risked on a trade, so results are stated in units of risk rather than
+rupees - the same call is a different rupee figure at every account size. Costs of 0.25% per round
+trip are already deducted. The universe is today's NIFTY constituents, which carries survivorship
+bias; that inflates absolute returns and is stated rather than corrected.</footer>
+</div>
