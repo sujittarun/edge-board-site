@@ -156,6 +156,13 @@ select.tkin{width:88px;font-family:inherit}
 .payoffsvg .pxl.start{text-anchor:start}
 .payoffsvg .pxl.mid{text-anchor:middle}
 .payoffsvg .pxl.end{text-anchor:end}
+.payoffsvg{cursor:crosshair}
+.payoffsvg .phair{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:2 2}
+.payoffsvg .pdot{fill:var(--ink);stroke:var(--surface);stroke-width:1.5}
+.payread{margin-top:6px;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.payread b{font-family:"IBM Plex Mono",monospace}
+.payread .pos{color:var(--edge)}
+.payread .neg{color:var(--bad)}
 .paylegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--ink-2)}
 .paylegend .sw{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:baseline}
 .paylegend .sw.max{background:var(--edge)}
@@ -1844,8 +1851,16 @@ function openTicket(id) {
     const lo0 = Math.min(spot, ...ks), hi0 = Math.max(spot, ...ks);
     const pad = Math.max((hi0 - lo0) * 0.55, spot * 0.035);
     const lo = lo0 - pad, hi = hi0 + pad;
-    const N = 160, xs = [], ys = [];
-    for (let i = 0; i <= N; i++) { const S = lo + (hi - lo) * i / N; xs.push(S); ys.push(pnlAt(S)); }
+    // A payoff is piecewise linear with kinks EXACTLY at the strikes, so a uniform grid is the one
+    // sampling that gets it wrong: any interval straddling a strike is interpolated straight
+    // through the corner. That rounded the shoulders and put the break-even out by up to a step -
+    // the chart claimed 23,356 while 23,361 still read max profit. Sampling the strikes themselves
+    // means every kink is a vertex, the polyline is exact rather than approximate, and no interval
+    // contains a corner for the break-even search to cut.
+    const N = 160, grid = [];
+    for (let i = 0; i <= N; i++) grid.push(lo + (hi - lo) * i / N);
+    const xs = [...new Set(grid.concat(ks.filter(k => k > lo && k < hi)))].sort((a, b) => a - b);
+    const ys = xs.map(pnlAt);
     const W = 620, H = 190, PADL = 54, PADR = 12, PADT = 12, PADB = 26;
     const yMax = Math.max(...ys), yMin = Math.min(...ys);
     const span = Math.max(Math.abs(yMax), Math.abs(yMin), 1) * 1.15;
@@ -1867,7 +1882,7 @@ function openTicket(id) {
     };
     // where the curve crosses zero - the only two numbers most people want off this chart
     const bes = [];
-    for (let i = 1; i <= N; i++) {
+    for (let i = 1; i < xs.length; i++) {          // xs, not N - the strikes added extra vertices
       if ((ys[i - 1] <= 0 && ys[i] > 0) || (ys[i - 1] >= 0 && ys[i] < 0)) {
         const t = Math.abs(ys[i - 1]) / (Math.abs(ys[i - 1]) + Math.abs(ys[i]));
         bes.push(xs[i - 1] + (xs[i] - xs[i - 1]) * t);
@@ -1892,13 +1907,55 @@ function openTicket(id) {
       <text x="${PADL}" y="${H - 8}" class="pxl start">${tick(lo)}</text>
       <text x="${X(spot).toFixed(1)}" y="${H - 8}" class="pxl mid">${tick(spot)}</text>
       <text x="${W - PADR}" y="${H - 8}" class="pxl end">${tick(hi)}</text>
+      <g id="pxhair" style="display:none">
+        <line y1="${PADT}" y2="${H - PADB}" class="phair"/>
+        <circle r="3.5" class="pdot"/>
+      </g>
+      <rect x="${PADL}" y="${PADT}" width="${W - PADL - PADR}" height="${H - PADT - PADB}"
+        fill="transparent" id="phit"/>
     </svg>
+    <div class="payread" id="pyread"></div>
     <div class="paylegend">
       <span><i class="sw max"></i>max ${money(yMax)}</span>
       <span><i class="sw min"></i>min ${money(yMin)}</span>
       ${bes.length ? `<span><i class="sw be"></i>break even ${bes.map(tick).join(' and ')}</span>` : ''}
       <span><i class="sw sp"></i>spot ${tick(spot)}</span>
     </div>`;
+
+    // Hover readout. The chart answers "what shape is this"; the crosshair answers "and what do I
+    // make if it closes HERE", which is the question anyone actually brings to a payoff diagram.
+    const svg = host.querySelector('.payoffsvg');
+    const hair = host.querySelector('#pxhair');
+    const line = hair.querySelector('line'), dot = hair.querySelector('circle');
+    const out = host.querySelector('#pyread');
+    const rest = () => {                      // with no cursor on it, report the spot close
+      hair.style.display = 'none';
+      const v = pnlAt(spot);
+      out.innerHTML = `at <b>${tick(spot)}</b> (spot today) &rarr;
+        <b class="${v >= 0 ? 'pos' : 'neg'}">${money(v)}</b>
+        <span class="exmeta">move the cursor across the chart for any other close</span>`;
+    };
+    const at = ev => {
+      const r = svg.getBoundingClientRect();
+      const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX);
+      // client pixels -> viewBox units; the svg is width:100% so the two differ by the scale factor
+      const vx = (cx - r.left) / r.width * W;
+      const S = Math.min(hi, Math.max(lo, lo + (vx - PADL) / (W - PADL - PADR) * (hi - lo)));
+      const v = pnlAt(S);
+      if (v == null) return;
+      hair.style.display = '';
+      line.setAttribute('x1', X(S).toFixed(1)); line.setAttribute('x2', X(S).toFixed(1));
+      dot.setAttribute('cx', X(S).toFixed(1)); dot.setAttribute('cy', Y(v).toFixed(1));
+      const away = (S - spot) / spot * 100;
+      out.innerHTML = `at <b>${tick(S)}</b>
+        <span class="exmeta">${away >= 0 ? '+' : ''}${away.toFixed(1)}% from spot</span> &rarr;
+        <b class="${v >= 0 ? 'pos' : 'neg'}">${money(v)}</b>`;
+    };
+    svg.addEventListener('mousemove', at);
+    svg.addEventListener('mouseleave', rest);
+    svg.addEventListener('touchstart', at, {passive: true});
+    svg.addEventListener('touchmove', at, {passive: true});
+    rest();
   }
 
   function paint() {
