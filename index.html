@@ -156,6 +156,9 @@ select.tkin{width:88px;font-family:inherit}
 .payoffsvg .pxl.start{text-anchor:start}
 .payoffsvg .pxl.mid{text-anchor:middle}
 .payoffsvg .pxl.end{text-anchor:end}
+.nofeed{margin:6px 0 0;font-size:12.5px;color:var(--mid);background:var(--mid-soft);
+  border-left:3px solid var(--mid);padding:6px 10px}
+.nofeed code{font-family:"IBM Plex Mono",monospace;font-size:12px}
 .payoffsvg{cursor:crosshair}
 .payoffsvg .phair{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:2 2}
 .payoffsvg .pdot{fill:var(--ink);stroke:var(--surface);stroke-width:1.5}
@@ -1272,6 +1275,12 @@ function paintClock() {
   // itself rather than only in the header pill, which is where the doubt actually arises.
   if (!LIVE.on) document.querySelectorAll('#siglist [data-ltp]')
                         .forEach(t => t.classList.add('stale'));
+  // And say WHY, once, where it cannot be missed. Pages is static hosting: it has no server, so
+  // /api/quotes is a 404 there and this copy can never mark anything live however often it is
+  // reloaded. That is not a fault to hunt for, it is what the two hosts are - but the page said
+  // nothing, so it looked like a bug and got chased as one more than once. Naming it costs a line.
+  const b = $('#nofeed');
+  if (b) b.style.display = (!LIVE.on && marketState().open && API.probed && !API.ownOk) ? '' : 'none';
 }
 // Re-mark every setup against a fresh quote, mirroring scripts/apply_live.py.
 // Cards and signals are separate objects - the cards are what the Trade tab draws, so marking
@@ -1311,13 +1320,13 @@ function remark(q) {
    as a trustworthy origin, so an https page is allowed to call it. Try our own origin first, fall
    back to the local server, and remember whichever answered. If neither does, the page is honestly
    static and says so. */
-const API = {base: '', probed: false};
+const API = {base: '', probed: false, ownOk: false};
 async function api(path) {
   if (!API.probed) {
     API.probed = true;
     try {
       const r = await fetch(path, {cache:'no-store'});
-      if (r.ok) return r;                         // this origin serves it; base stays ''
+      if (r.ok) { API.ownOk = true; return r; }   // this origin serves it; base stays ''
     } catch (e) { /* fall through to the local server */ }
     API.base = 'http://127.0.0.1:8931';
   }
@@ -3585,6 +3594,8 @@ function setupView() {
 }
 $('#setupbody').innerHTML = `<div class="intro tight"><h1>What you could put on today</h1>
   <p class="exmeta" id="livecount" style="margin:4px 0 0">prices at close ${(D.marks && D.marks.as_of) || SIG.as_of}</p>
+  <p id="nofeed" class="nofeed" style="display:none">Static copy &mdash; no live feed here.
+    Open <code>http://127.0.0.1:8931/</code> for live prices.</p>
   <div id="siglist"></div>
   <div class="refs">
     <div class="callout" id="rankwhy" style="margin:0 0 10px"></div>
