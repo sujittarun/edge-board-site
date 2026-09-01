@@ -1305,23 +1305,35 @@ function remark(q) {
   return n;
 }
 /* Where the live endpoints actually are.
-   Served locally, they are on this origin. Served from Pages they do not exist at all - the deployed
-   board is static HTML, so /api/quotes is a 404 there and no amount of reloading will ever make it
-   live. But the same machine can usually still reach serve_live.py, and a browser treats 127.0.0.1
-   as a trustworthy origin, so an https page is allowed to call it. Try our own origin first, fall
-   back to the local server, and remember whichever answered. If neither does, the page is honestly
-   static and says so. */
+
+   Served locally they are on this origin. On GitHub Pages they do not exist at all: Pages is static
+   hosting, so /api/quotes is a 404 there and no amount of reloading makes that page live. The fix is
+   not to host a second server but to let the deployed page borrow the one already running - it is
+   reachable over the tunnel, and it is the only machine holding a Kite token.
+
+   So: try this origin, then the tunnel, then localhost. Whichever answers is remembered.
+
+   The ngrok header is not optional. Without it ngrok replies with its interstitial HTML, which
+   carries no CORS headers, and the browser reports "No 'Access-Control-Allow-Origin' header" -
+   which sounds like a CORS bug and is actually an interstitial. Sending it on every call skips the
+   page entirely. It is harmless anywhere else. */
+const TUNNEL = 'https://sheet-monotone-yapping.ngrok-free.dev';
+const HDRS = {'ngrok-skip-browser-warning': '1', 'bypass-tunnel-reminder': '1'};
 const API = {base: '', probed: false, ownOk: false};
 async function api(path) {
+  const get = b => fetch(b + path, {cache:'no-store', headers: HDRS});
   if (!API.probed) {
     API.probed = true;
     try {
       const r = await fetch(path, {cache:'no-store'});
       if (r.ok) { API.ownOk = true; return r; }   // this origin serves it; base stays ''
-    } catch (e) { /* fall through to the local server */ }
-    API.base = 'http://127.0.0.1:8931';
+    } catch (e) { /* not served here - go looking */ }
+    for (const b of [TUNNEL, 'http://127.0.0.1:8931']) {
+      try { const r = await get(b); if (r.ok) { API.base = b; return r; } } catch (e) {}
+    }
+    API.base = TUNNEL;                            // nothing answered; keep trying the tunnel
   }
-  return fetch(API.base + path, {cache:'no-store'});
+  return API.ownOk ? fetch(path, {cache:'no-store'}) : get(API.base);
 }
 async function pollLive() {
   try {
