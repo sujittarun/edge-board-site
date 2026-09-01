@@ -410,7 +410,13 @@ footer p{max-width:70ch}
 .ltp.up{background:var(--edge-soft);border-color:var(--edge);animation:tickflash .55s ease-out}
 .ltp.down{background:var(--bad-soft);border-color:var(--bad);animation:tickflash .55s ease-out}
 @keyframes tickflash{from{transform:translateY(-2px)}to{transform:none}}
-@media (prefers-reduced-motion:reduce){.ltp.up,.ltp.down{animation:none}}
+/* the heartbeat: rebuilt each poll, so it fires even on a stock that has not traded */
+.ltp .hb{width:5px;height:5px;border-radius:50%;background:var(--edge);flex:none;
+  align-self:center;animation:hbeat 1.6s ease-out}
+@keyframes hbeat{0%{opacity:1;transform:scale(1.9)}45%{opacity:.9;transform:scale(1)}100%{opacity:.30;transform:scale(1)}}
+.ltp.stale{opacity:.5}
+.ltp.stale .hb{background:var(--ink-3);animation:none;opacity:.5}
+@media (prefers-reduced-motion:reduce){.ltp.up,.ltp.down,.ltp .hb{animation:none}}
 .kbtn{font-family:"Archivo",Arial,sans-serif;font-weight:700;font-size:13px;line-height:1;
   letter-spacing:.01em;padding:9px 14px;border-radius:3px;cursor:pointer;
   border:1px solid var(--edge);background:var(--edge);color:var(--surface);transition:opacity .12s}
@@ -1261,6 +1267,11 @@ function paintClock() {
   $('#mktlabel').innerHTML = LIVE.on
     ? `Live &middot; updated ${LIVE.at}`
     : st.label;
+  // A dead feed used to be invisible on the cards: the prices simply stopped, and a stopped price
+  // is indistinguishable from a quiet one. Marking them says which it is, next to the number
+  // itself rather than only in the header pill, which is where the doubt actually arises.
+  if (!LIVE.on) document.querySelectorAll('#siglist [data-ltp]')
+                        .forEach(t => t.classList.add('stale'));
 }
 // Re-mark every setup against a fresh quote, mirroring scripts/apply_live.py.
 // Cards and signals are separate objects - the cards are what the Trade tab draws, so marking
@@ -3099,7 +3110,11 @@ const SC = {'valid':'c-edge','better entry':'c-edge','extended':'c-dec','missed'
 function ltpHTML(L) {
   if (!L || L.ltp == null) return '';
   const d = L.day_pct, dir = d == null ? '' : (d > 0 ? 'pos' : d < 0 ? 'neg' : '');
-  return `<b class="${dir}">${(+L.ltp).toFixed(2)}</b>${d == null ? '' :
+  // The dot is rebuilt on every successful poll, so its CSS animation restarts each time and the
+  // price visibly beats whether or not it moved. A tick flash alone could not do this: a stock that
+  // simply has not traded looked exactly like a dead feed, which is the thing that needed telling
+  // apart. No repaint means no beat, so a stalled feed goes still on its own.
+  return `<i class="hb"></i><b class="${dir}">${(+L.ltp).toFixed(2)}</b>${d == null ? '' :
     `<span class="${dir}">${d > 0 ? '+' : ''}${d}%</span>`}`;
 }
 
@@ -3164,9 +3179,16 @@ function paintLive() {
     const t = node.querySelector('[data-ltp]');
     if (t && L) {
       t.innerHTML = ltpHTML(L);
+      t.classList.remove('stale');
       if (L.prev_ltp != null && L.ltp !== L.prev_ltp) {
         t.classList.remove('up','down'); void t.offsetWidth;      // restart the flash
         t.classList.add(L.ltp > L.prev_ltp ? 'up' : 'down');
+        // and take it off again. The tint used to be added and never cleared, so every card that
+        // had ticked once stayed permanently green or red - which is a STATE, and a state that
+        // never changes is exactly what a frozen page looks like. It has to fade to read as a
+        // pulse rather than a verdict.
+        clearTimeout(t._fade);
+        t._fade = setTimeout(() => t.classList.remove('up','down'), 900);
       }
     }
     const st = node.querySelector('[data-status]');
