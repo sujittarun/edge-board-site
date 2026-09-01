@@ -1304,9 +1304,28 @@ function remark(q) {
   (SIG.cards || []).forEach(mark);
   return n;
 }
+/* Where the live endpoints actually are.
+   Served locally, they are on this origin. Served from Pages they do not exist at all - the deployed
+   board is static HTML, so /api/quotes is a 404 there and no amount of reloading will ever make it
+   live. But the same machine can usually still reach serve_live.py, and a browser treats 127.0.0.1
+   as a trustworthy origin, so an https page is allowed to call it. Try our own origin first, fall
+   back to the local server, and remember whichever answered. If neither does, the page is honestly
+   static and says so. */
+const API = {base: '', probed: false};
+async function api(path) {
+  if (!API.probed) {
+    API.probed = true;
+    try {
+      const r = await fetch(path, {cache:'no-store'});
+      if (r.ok) return r;                         // this origin serves it; base stays ''
+    } catch (e) { /* fall through to the local server */ }
+    API.base = 'http://127.0.0.1:8931';
+  }
+  return fetch(API.base + path, {cache:'no-store'});
+}
 async function pollLive() {
   try {
-    const r = await fetch('/api/quotes', {cache:'no-store'});
+    const r = await api('/api/quotes');
     if (!r.ok) throw 0;
     const j = await r.json();
     if (!j.ok || !j.quotes) throw 0;
@@ -1326,7 +1345,7 @@ async function pollLive() {
   paintClock();
 }
 // local-only config; the published page simply never gets a key and shows orders instead
-fetch('/api/config', {cache:'no-store'}).then(r => r.json()).then(c => {
+api('/api/config').then(r => r.json()).then(c => {
   if (c.kite_api_key) KITE.key = c.kite_api_key;
   if (c.kite_cash != null) SIG.kite_cash = c.kite_cash;
   // your real capital lives locally too; the published copy just carries a round default
@@ -1776,7 +1795,7 @@ const LEGQ = {at: null, quotes: {}, err: null};
 
 async function pullLegs() {
   try {
-    const r = await fetch('/api/legs', {cache: 'no-store'});
+    const r = await api('/api/legs');
     const j = await r.json();
     LEGQ.quotes = j.quotes || {};
     LEGQ.at = j.at || null;
