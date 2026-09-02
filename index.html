@@ -1313,41 +1313,30 @@ function remark(q) {
 
    So: try this origin, then the tunnel, then localhost. Whichever answers is remembered.
 
-   Order matters. quotes.json is a SNAPSHOT committed by a scheduled job in the site repo, so it
-   works with the laptop shut, needs no tunnel and no credential, and being on this origin it
-   involves no CORS at all. It is the fallback that should almost always win on the deployed board.
-   The tunnel is tried first only because a live feed, where one exists, is strictly better.
+   Two cases, and only two. Served by serve_live.py the endpoints are on this origin, and quotes
+   are a real tick. Served from Pages they do not exist - Pages is static - and quotes come from
+   quotes.json, a snapshot committed every fifteen minutes by a workflow in the site repo. That
+   file is on this origin too, so there is no CORS anywhere in this function.
 
-   The ngrok header is not optional when the tunnel IS used. Without it ngrok replies with its
-   interstitial HTML, which carries no CORS headers, and the browser reports "No
-   'Access-Control-Allow-Origin' header" - which sounds like a CORS bug and is actually an
-   interstitial. Harmless everywhere else. */
-const TUNNEL = 'https://sheet-monotone-yapping.ngrok-free.dev';
-const HDRS = {'ngrok-skip-browser-warning': '1', 'bypass-tunnel-reminder': '1'};
-const API = {base: '', probed: false, ownOk: false, snapshot: false};
+   There used to be a tunnel between these two, so the deployed page could reach the laptop. It is
+   gone. It only worked while the Mac was awake, which is the dependency the snapshot removed, and
+   it dragged in CORS headers, an interstitial and a header to skip the interstitial - all of that
+   to deliver what a committed JSON file delivers with none of it. */
+const API = {probed: false, ownOk: false};
 async function api(path) {
-  const get = b => fetch(b + path, {cache:'no-store', headers: HDRS});
   if (!API.probed) {
     API.probed = true;
     try {
       const r = await fetch(path, {cache:'no-store'});
-      if (r.ok) { API.ownOk = true; return r; }   // served here - a local server is running
-    } catch (e) { /* not served here - go looking */ }
-    try { const r = await get(TUNNEL); if (r.ok) { API.base = TUNNEL; return r; } } catch (e) {}
-    // the committed snapshot: no laptop, no tunnel, no key
-    if (path === '/api/quotes') {
-      try { const r = await fetch('quotes.json', {cache:'no-store'});
-            if (r.ok) { API.snapshot = true; return r; } } catch (e) {}
-    }
-    try { const r = await get('http://127.0.0.1:8931');
-          if (r.ok) { API.base = 'http://127.0.0.1:8931'; return r; } } catch (e) {}
-    API.snapshot = true;
+      if (r.ok) { API.ownOk = true; return r; }   // a local server is running
+    } catch (e) { /* static host - fall through to the snapshot */ }
+  } else if (API.ownOk) {
+    return fetch(path, {cache:'no-store'});
   }
-  if (API.ownOk) return fetch(path, {cache:'no-store'});
-  if (API.snapshot) return path === '/api/quotes'
+  // the snapshot only carries quotes; the option chain and config need the local server
+  return path === '/api/quotes'
     ? fetch('quotes.json', {cache:'no-store'})
     : Promise.resolve(new Response('{}', {status: 404}));
-  return get(API.base);
 }
 async function pollLive() {
   try {
