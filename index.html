@@ -3333,9 +3333,17 @@ function blotterHTML() {
     const R = t.status === 'closed' ? t.R : (t.live_R ?? t.open_R);
     const px = t.status === 'closed' ? t.exit : (t.ltp ?? t.mark);
     const cls = R == null ? '' : (R > 0 ? 'pos' : 'neg');
+    // "day 1" invited the obvious wrong reading - that it counts days since the signal. It counts
+    // completed sessions since ENTRY, which is a different and later clock: the signal fires on
+    // one close and the trade enters at the NEXT open, so a Monday signal is on its first session
+    // by Tuesday evening. Saying it out of the rule's own maximum fixes the ambiguity and shows
+    // how much of the horizon is spent, which is the part worth knowing.
+    const maxBars = (S.find(s => s.id === t.strategy) || {}).params?.max_bars;
     const why = t.status === 'closed'
       ? {target:'hit target', stop:'stopped out', time:'timed out'}[t.reason] || t.reason
-      : t.status === 'open' ? `day ${t.bars}` : 'enters at the next open';
+      : t.status === 'open'
+        ? `${t.bars} of ${maxBars || '?'} sessions held`
+        : 'enters at the next open';
     return `<tr>
       <td><b>${t.symbol}</b> <span class="chip ${TIER[t.tier]||'c-weak'}">${t.tier||'-'}</span>
         <div class="exmeta">${t.strategy_name || t.strategy}</div></td>
