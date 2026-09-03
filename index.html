@@ -1384,6 +1384,36 @@ api('/api/config').then(r => r.json()).then(c => {
 }).catch(() => {});
 
 paintClock();
+/* The tick feed. The 5-second poll below stays as the floor; this is the ceiling. The Worker's
+   Durable Object holds one socket to Kite and pushes each batch of ticks here within milliseconds.
+   Everything downstream is the SAME path the poll uses - remark, paintTape, paintLive - so a tick
+   and a poll are indistinguishable to the cards; only the clock speed differs.
+
+   The first message is a full snapshot; every one after carries only the symbols that traded.
+   Reconnects on close with a backoff, and does nothing outside the session or when the page is
+   served without a Worker URL, so a laptop copy or a stale build degrades to the poll silently. */
+let TICKS = null;
+function tickFeed(delay) {
+  if (WORKER.includes('WORKER_SUBDOMAIN') || !marketState().open) return;
+  let ws;
+  try { ws = new WebSocket(WORKER.replace(/^http/, 'ws') + '/ws'); } catch (e) { return; }
+  ws.onmessage = ev => {
+    let j; try { j = JSON.parse(ev.data); } catch (e) { return; }
+    if (!j.ok || !j.quotes) return;
+    TICKS = Object.assign(TICKS || {}, j.quotes);
+    remark(j.quotes);
+    remarkPaper(j.quotes);
+    paintTape(TICKS);
+    LIVE = {on:true, at:(j.at||'').slice(11,16), tick:(j.at||'').slice(11,19)};
+    paintLive();
+    const c = $('#livecount');
+    if (c) c.textContent = `ticking - last trade ${LIVE.tick}`;
+    paintClock();
+  };
+  ws.onclose = () => { if (marketState().open) setTimeout(() => tickFeed(Math.min((delay||1000)*2, 30000)), delay||1000); };
+  ws.onerror = () => { try { ws.close(); } catch (e) {} };
+}
+tickFeed();
 setInterval(paintClock, 20000);
 pollLive();
 setInterval(() => { if (marketState().open) pollLive(); }, 5000);
