@@ -1327,7 +1327,7 @@ function remark(q) {
    snapshot stays as the floor for when the Worker has no token yet (every morning before login).
    Filled in at deploy - empty means "not deployed", and the code skips it rather than 404ing. */
 const WORKER = 'https://edge-board-quotes.edge-board.workers.dev';
-const API = {probed: false, ownOk: false, worker: false};
+const API = {probed: false, ownOk: false};
 async function api(path) {
   if (!API.probed) {
     API.probed = true;
@@ -1335,19 +1335,22 @@ async function api(path) {
       const r = await fetch(path, {cache:'no-store'});
       if (r.ok) { API.ownOk = true; return r; }   // a local server is running
     } catch (e) { /* static host - fall through */ }
-    if (path === '/api/quotes' && !WORKER.includes('WORKER_SUBDOMAIN')) {
-      try { const r = await fetch(WORKER + '/quotes', {cache:'no-store'});
-            if (r.ok) { API.worker = true; return r; } } catch (e) {}
-    }
   } else if (API.ownOk) {
     return fetch(path, {cache:'no-store'});
-  } else if (API.worker && path === '/api/quotes') {
-    return fetch(WORKER + '/quotes', {cache:'no-store'});
   }
-  // the snapshot only carries quotes; the option chain and config need the local server
-  return path === '/api/quotes'
-    ? fetch('quotes.json', {cache:'no-store'})
-    : Promise.resolve(new Response('{}', {status: 404}));
+  // Only quotes exist off-machine; the option chain and config need the local server.
+  if (path !== '/api/quotes') return new Response('{}', {status: 404});
+  // Worker first, every poll - not once at probe time. The first api() call at boot is
+  // /api/config, so a probe keyed on the path never saw /api/quotes, set itself done, and the
+  // Worker was skipped forever: the deployed board read yesterday's committed snapshot with a
+  // live feed sitting right there. Trying it on each poll also means a transient Worker error
+  // falls back to the snapshot for one tick and self-heals, instead of disabling the feed for
+  // the whole session.
+  if (!WORKER.includes('WORKER_SUBDOMAIN')) {
+    try { const r = await fetch(WORKER + '/quotes', {cache:'no-store'}); if (r.ok) return r; }
+    catch (e) { /* down or not deployed - use the snapshot */ }
+  }
+  return fetch('quotes.json', {cache:'no-store'});
 }
 async function pollLive() {
   try {
