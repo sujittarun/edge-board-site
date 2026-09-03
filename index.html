@@ -1322,16 +1322,27 @@ function remark(q) {
    gone. It only worked while the Mac was awake, which is the dependency the snapshot removed, and
    it dragged in CORS headers, an interstitial and a header to skip the interstitial - all of that
    to deliver what a committed JSON file delivers with none of it. */
-const API = {probed: false, ownOk: false};
+/* The Worker is the always-on feed: Cloudflare cron, every minute of the session, one batched
+   Kite call. It is tried before the committed snapshot because it is fresher by design; the
+   snapshot stays as the floor for when the Worker has no token yet (every morning before login).
+   Filled in at deploy - empty means "not deployed", and the code skips it rather than 404ing. */
+const WORKER = 'https://edge-board-quotes.edge-board.workers.dev';
+const API = {probed: false, ownOk: false, worker: false};
 async function api(path) {
   if (!API.probed) {
     API.probed = true;
     try {
       const r = await fetch(path, {cache:'no-store'});
       if (r.ok) { API.ownOk = true; return r; }   // a local server is running
-    } catch (e) { /* static host - fall through to the snapshot */ }
+    } catch (e) { /* static host - fall through */ }
+    if (path === '/api/quotes' && !WORKER.includes('WORKER_SUBDOMAIN')) {
+      try { const r = await fetch(WORKER + '/quotes', {cache:'no-store'});
+            if (r.ok) { API.worker = true; return r; } } catch (e) {}
+    }
   } else if (API.ownOk) {
     return fetch(path, {cache:'no-store'});
+  } else if (API.worker && path === '/api/quotes') {
+    return fetch(WORKER + '/quotes', {cache:'no-store'});
   }
   // the snapshot only carries quotes; the option chain and config need the local server
   return path === '/api/quotes'
