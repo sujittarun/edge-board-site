@@ -3339,8 +3339,12 @@ function blotterHTML() {
     // by Tuesday evening. Saying it out of the rule's own maximum fixes the ambiguity and shows
     // how much of the horizon is spent, which is the part worth knowing.
     const maxBars = (S.find(s => s.id === t.strategy) || {}).params?.max_bars;
+    // Which rule ended it, and when. "stopped out" said the same thing for a first-session stop
+    // and for a trade that expired still in profit - opposite outcomes under one label.
     const why = t.status === 'closed'
-      ? {target:'hit target', stop:'stopped out', time:'timed out'}[t.reason] || t.reason
+      ? ({target: `target reached, session ${t.bars}`,
+          stop:   `stop loss hit, session ${t.bars}`,
+          time:   `time limit reached, ${t.bars} sessions`}[t.reason] || t.reason)
       : t.status === 'open'
         ? `${t.bars} of ${maxBars || '?'} sessions held`
         : 'enters at the next open';
