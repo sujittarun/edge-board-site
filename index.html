@@ -408,7 +408,17 @@ footer p{max-width:70ch}
 .ltp{display:inline-flex;align-items:baseline;gap:6px;margin-left:10px;
   font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-size:13px;padding:2px 7px;border-radius:3px;border:1px solid transparent;transition:background .5s,border-color .5s}
-.ltp b{font-weight:600;font-size:14px}
+/* Fixed-width digits so a price changing from 708.95 to 709.1 cannot change the cell's width and
+   shove the row - every tick was reflowing the card header. Same on the tape. */
+.ltp b{font-weight:600;font-size:14px;font-variant-numeric:tabular-nums;display:inline-block;min-width:6.5ch;text-align:right}
+.ltp span{font-variant-numeric:tabular-nums;display:inline-block;min-width:6ch}
+.tk .px,.tk .ch{font-variant-numeric:tabular-nums}
+.tk .px{display:inline-block;min-width:7ch;text-align:right}
+.tk .ch{display:inline-block;min-width:7.5ch}
+/* Own compositor layer: the scroll is a transform animation, and without this any layout on the
+   main thread - a card repainting, a chart redrawing - stalls it for a frame. That was the
+   stop-and-go. */
+.tapetrack{will-change:transform;backface-visibility:hidden}
 .ltp span{font-size:11.5px}
 .ltp.up{background:var(--edge-soft);border-color:var(--edge);animation:tickflash .55s ease-out}
 .ltp.down{background:var(--bad-soft);border-color:var(--bad);animation:tickflash .55s ease-out}
@@ -1067,13 +1077,16 @@ function chart(candles, mk = {}, W = 700, H = 210) {
   candles.forEach((c, i) => { const [, op, h, l, cl] = c, x = P.l + i * cw + cw / 2;
     const up = cl >= op, col = up ? 'var(--edge)' : 'var(--bad)';
     const now = mk.live && i === candles.length - 1;
-    o += `<line x1="${x}" x2="${x}" y1="${y(h)}" y2="${y(l)}" stroke="${col}" stroke-width="${now ? 1.3 : .8}" opacity=".9"/>`;
+    // The forming bar carries data-live tags so a tick can move it by attribute - see tickChart.
+    // Rebuilding this whole SVG on every tick, across a hundred cards, is what made the page jump.
+    const tag = now ? ' data-live="wick"' : '';
+    o += `<line${tag} x1="${x}" x2="${x}" y1="${y(h)}" y2="${y(l)}" stroke="${col}" stroke-width="${now ? 1.3 : .8}" opacity=".9"/>`;
     const yo = y(op), yc = y(cl);
-    o += `<rect x="${x - bw / 2}" y="${Math.min(yo, yc)}" width="${bw}" height="${Math.max(.9, Math.abs(yc - yo))}"
+    o += `<rect${now ? ' data-live="body"' : ''} x="${x - bw / 2}" y="${Math.min(yo, yc)}" width="${bw}" height="${Math.max(.9, Math.abs(yc - yo))}"
             fill="${col}" opacity="${now ? 1 : (up ? .55 : .9)}"${now ? ' stroke="var(--ink)" stroke-width=".5"' : ''}/>`;
     if (now) {
-      o += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(cl)}" y2="${y(cl)}" stroke="${col}" stroke-width=".7" opacity=".45"/>
-            <circle cx="${x}" cy="${y(cl)}" r="2.6" fill="${col}"><animate attributeName="r" values="2.6;5;2.6"
+      o += `<line data-live="close" x1="${P.l}" x2="${W - P.r}" y1="${y(cl)}" y2="${y(cl)}" stroke="${col}" stroke-width=".7" opacity=".45"/>
+            <circle data-live="dot" cx="${x}" cy="${y(cl)}" r="2.6" fill="${col}"><animate attributeName="r" values="2.6;5;2.6"
               dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.15;1"
               dur="1.8s" repeatCount="indefinite"/></circle>`;
     } });
@@ -3279,35 +3292,60 @@ function chartFor(c, use) {
 /* The tick path: price cell and heartbeat for the cards that traded, and the forming candle at
    most once a second per symbol. Everything else a card shows - status, levels, the basket - is
    left to paintLive on the 5-second poll. */
-const CHART_AT = {};
+/* Move the forming candle by attribute. chart() tags the live bar's wick, body, close line and
+   dot with data-live, and stores the scale it drew with in CHARTDATA. A tick then sets four or
+   five attributes instead of rebuilding a whole SVG - and a hundred SVG rebuilds a second was the
+   page jumping. Only when the bar breaks out of the drawn range does the chart redraw, because
+   the axis genuinely has to move then; that is a few times a session, not a few times a second. */
+function tickChart(sym, bar, node) {
+  const d = CHARTDATA['setup:' + sym]; if (!d || !bar) return false;
+  const svg = node.querySelector('[data-chart] svg'); if (!svg) return false;
+  const [, op, h, l, cl] = bar, {P, T, B, H} = d;
+  if (h > T || l < B) return false;                        // out of range: needs a real redraw
+  const y = v => P.t + (T - v) / (T - B) * (H - P.t - P.b);
+  const up = cl >= op, col = up ? 'var(--edge)' : 'var(--bad)';
+  const yo = y(op), yc = y(cl);
+  const w = svg.querySelector('[data-live="wick"]'), b = svg.querySelector('[data-live="body"]');
+  const c = svg.querySelector('[data-live="close"]'), dot = svg.querySelector('[data-live="dot"]');
+  if (!w || !b) return false;
+  w.setAttribute('y1', y(h)); w.setAttribute('y2', y(l)); w.setAttribute('stroke', col);
+  b.setAttribute('y', Math.min(yo, yc)); b.setAttribute('height', Math.max(.9, Math.abs(yc - yo))); b.setAttribute('fill', col);
+  if (c) { c.setAttribute('y1', yc); c.setAttribute('y2', yc); c.setAttribute('stroke', col); }
+  if (dot) { dot.setAttribute('cy', yc); dot.setAttribute('fill', col); }
+  return true;
+}
+
 function paintTick(syms) {
   const list = $('#siglist'); if (!list) return;
   const byS = Object.fromEntries((SIG.cards||[]).map(c => [c.symbol, c]));
-  const cap = +$('#cap')?.value || SIG.capital, rp = +$('#rp')?.value || SIG.risk_pct;
-  const now = Date.now();
+  // Gather, then write once inside a single animation frame. Interleaving a read (offsetWidth,
+  // for the flash restart) with writes across a hundred cards forces a layout per card.
+  const jobs = [];
   for (const s of syms) {
     const c = byS[s]; if (!c || !c.live) continue;
-    const L = c.live;
-    list.querySelectorAll(`[data-sym="${s}"]`).forEach(node => {
-      const t = node.querySelector('[data-ltp]');
+    list.querySelectorAll(`[data-sym="${s}"]`).forEach(node => jobs.push([c, node]));
+  }
+  if (!jobs.length) return;
+  requestAnimationFrame(() => {
+    for (const [c, node] of jobs) {
+      const L = c.live, t = node.querySelector('[data-ltp]');
       if (t) {
+        const moved = L.prev_ltp != null && L.ltp !== L.prev_ltp;
         t.innerHTML = ltpHTML(L);
         t.classList.remove('stale');
-        if (L.prev_ltp != null && L.ltp !== L.prev_ltp) {
-          t.classList.remove('up','down'); void t.offsetWidth;
+        if (moved) {
+          t.classList.remove('up','down');
           t.classList.add(L.ltp > L.prev_ltp ? 'up' : 'down');
           clearTimeout(t._fade);
           t._fade = setTimeout(() => t.classList.remove('up','down'), 900);
         }
       }
-      // the candle is an SVG rebuild; four a second per card is what made the page jump
-      if (now - (CHART_AT[s] || 0) >= 1000) {
+      if (!tickChart(c.symbol, c.live_bar, node)) {
         const ch = node.querySelector('[data-chart]');
-        if (ch) { const qty = Math.floor((cap*rp/100)/c.risk_per_share);
-                  ch.innerHTML = chartFor(c, L); CHART_AT[s] = now; }
+        if (ch) ch.innerHTML = chartFor(c, L);
       }
-    });
-  }
+    }
+  });
 }
 
 function paintLive() {
