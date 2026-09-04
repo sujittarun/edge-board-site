@@ -66,6 +66,9 @@ header.top{border-bottom:1px solid var(--rule);background:var(--surface);positio
 .pill.open{color:var(--edge);border-color:var(--edge)}
 .pill.open i{background:var(--edge);animation:beat 1.8s ease-in-out infinite}
 .pill.streaming{color:var(--edge);border-color:var(--edge);background:var(--edge-soft)}
+/* the morning state: market open, newest data from a previous session, login not yet done */
+.pill.stale{color:var(--mid);border-color:var(--mid);background:var(--mid-soft)}
+.pill.stale i{background:var(--mid);animation:none}
 @keyframes beat{0%,100%{opacity:1}50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.pill.open i{animation:none}}
 nav.tabs{display:flex;gap:2px;margin-left:auto}
@@ -1263,9 +1266,16 @@ function marketState() {
 let LIVE = {on:false, at:null};
 function paintClock() {
   const st = marketState(), el = $('#mkt');
-  el.className = 'pill' + (LIVE.on ? ' streaming' : st.open ? ' open' : '');
-  $('#mktlabel').innerHTML = LIVE.on
-    ? `Live &middot; updated ${LIVE.at}`
+  // "Live - updated 16:29" on a fresh morning was yesterday's last tick wearing today's badge.
+  // Kite's session token dies at the morning rollover, so until the day's login the newest data
+  // the board can have is from a previous session. Name that state; it is the one a reader
+  // cannot tell apart from a broken feed.
+  const today = istNow().toISOString().slice(0, 10);
+  const yesterdays = st.open && LIVE.date && LIVE.date < today;
+  el.className = 'pill' + (yesterdays ? ' stale' : LIVE.on ? ' streaming' : st.open ? ' open' : '');
+  $('#mktlabel').innerHTML = yesterdays
+    ? `needs today's login &middot; last data ${LIVE.date.slice(5)} ${LIVE.at}`
+    : LIVE.on ? `Live &middot; updated ${LIVE.at}`
     : st.label;
   // A dead feed used to be invisible on the cards: the prices simply stopped, and a stopped price
   // is indistinguishable from a quiet one. Marking them says which it is, next to the number
@@ -1361,7 +1371,7 @@ async function pollLive() {
     const n = remark(j.quotes);
     remarkPaper(j.quotes);
     paintTape(j.quotes);
-    LIVE = {on:true, at:(j.at||'').slice(11,16)};
+    LIVE = {on:true, at:(j.at||'').slice(11,16), date:(j.at||'').slice(0,10)};
     paintLive();
     const c = $('#livecount');
     // textContent, so this string must stay plain ASCII - an entity would render literally
@@ -1420,7 +1430,7 @@ function tickFeed(delay) {
       const T = window.__ticket;
       if (T && !T._t) T._t = setTimeout(() => { T._t = null; try { T.paint(); } catch (e) {} }, 400);
     }
-    LIVE = {on:true, at:(j.at||'').slice(11,16), tick:(j.at||'').slice(11,19)};
+    LIVE = {on:true, at:(j.at||'').slice(11,16), tick:(j.at||'').slice(11,19), date:(j.at||'').slice(0,10)};
     const c = $('#livecount');
     if (c) c.textContent = `ticking - last trade ${LIVE.tick}`;
   };
