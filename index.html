@@ -3375,8 +3375,11 @@ function paintLive() {
     if (st && L) st.innerHTML = `<span class="chip ${SC[L.status]||'c-weak'}" style="margin-left:6px">${L.status}</span>`;
     const lv = node.querySelector('[data-levels]');
     if (lv) lv.innerHTML = levelsHTML(use, qty, c, value > cap, value);
+    // The poll used to rebuild every card's chart every five seconds - 97 SVGs at once, the
+    // largest single stall left after ticks stopped doing it. Move the forming candle in place
+    // when the drawn range still holds; rebuild only when it does not.
     const ch = node.querySelector('[data-chart]');
-    if (ch) ch.innerHTML = chartFor(c, use);
+    if (ch && !(L && tickChart(c.symbol, c.live_bar, node))) ch.innerHTML = chartFor(c, use);
     const b = BASKETS['setup:' + c.symbol];          // keep the order in step with the price
     if (b) { b.legs[0].quantity = qty; b.legs[0].price = Math.round(use.entry*20)/20; }
   });
