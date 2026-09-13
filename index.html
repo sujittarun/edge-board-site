@@ -69,6 +69,13 @@ header.top{border-bottom:1px solid var(--rule);background:var(--surface);positio
 /* the morning state: market open, newest data from a previous session, login not yet done */
 .pill.stale{color:var(--mid);border-color:var(--mid);background:var(--mid-soft)}
 .pill.stale i{background:var(--mid);animation:none}
+.pill-btn{display:inline-flex;align-items:center;font-family:"Archivo";font-variation-settings:"wdth" 80;
+  text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:600;
+  padding:4px 10px;border:1px solid var(--rule-strong);border-radius:999px;color:var(--ink-2);
+  background:transparent;cursor:pointer;white-space:nowrap}
+.pill-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pill-btn:active{transform:translateY(1px)}
+.pill-btn:disabled{opacity:.55;cursor:default}
 @keyframes beat{0%,100%{opacity:1}50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.pill.open i{animation:none}}
 nav.tabs{display:flex;gap:2px;margin-left:auto}
@@ -493,7 +500,8 @@ footer p{max-width:70ch}
 
 <header class="top"><div class="wrap">
   <div class="brand"><b>EDGE BOARD</b>
-    <span class="pill" id="mkt"><i></i><span id="mktlabel">&mdash;</span></span></div>
+    <span class="pill" id="mkt"><i></i><span id="mktlabel">&mdash;</span></span>
+    <button class="pill-btn" id="loginbtn" title="Opens Kite's login page in a new tab">Login to Kite</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" aria-selected="true"  data-v="setups">Trade</button>
     <button role="tab" aria-selected="false" data-v="strategies">Strategies</button>
@@ -1407,6 +1415,30 @@ api('/api/config').then(r => r.json()).then(c => {
 }).catch(() => {});
 
 paintClock();
+// Kite's own login page, opened in its own tab - nothing here ever sees the password or the TOTP.
+// The redirect lands on the Mac (127.0.0.1:8765, a launchd job that is always listening for it -
+// scripts/login_server.py), which is why this works from any device: only the catch has to be
+// local, not the click. Poll the feed after, so the button says when it actually worked instead
+// of leaving you checking the tape yourself.
+$('#loginbtn').onclick = () => {
+  if (!KITE.key) { alert("No Kite API key on this page."); return; }
+  window.open(`https://kite.zerodha.com/connect/login?api_key=${encodeURIComponent(KITE.key)}&v=3`,
+              '_blank', 'noopener');
+  const b = $('#loginbtn'), was = b.textContent;
+  b.disabled = true; b.textContent = 'Waiting for Kite&#8230;';
+  let tries = 0;
+  const poll = setInterval(async () => {
+    tries++;
+    try {
+      const j = await (await fetch(WORKER + '/feed/health', {cache: 'no-store'})).json();
+      if (j.kite === 'open' && !j.needs_login) {
+        clearInterval(poll); b.textContent = 'Logged in'; setTimeout(() => { b.disabled = false; b.textContent = was; }, 5000);
+        return;
+      }
+    } catch (e) {}
+    if (tries >= 40) { clearInterval(poll); b.disabled = false; b.textContent = was; }
+  }, 3000);
+};
 /* The tick feed. The 5-second poll below stays as the floor; this is the ceiling. The Worker's
    Durable Object holds one socket to Kite and pushes each batch of ticks here within milliseconds.
    Everything downstream is the SAME path the poll uses - remark, paintTape, paintLive - so a tick
